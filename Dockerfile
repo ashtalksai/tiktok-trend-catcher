@@ -49,6 +49,9 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Copy better-sqlite3 native bindings (not included in standalone output)
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/.pnpm/better-sqlite3@*/node_modules/better-sqlite3 ./node_modules/better-sqlite3
+
 USER nextjs
 
 EXPOSE 3000
