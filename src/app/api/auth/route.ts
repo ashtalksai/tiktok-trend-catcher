@@ -15,8 +15,8 @@ export async function POST(request: Request) {
     }
 
     // Generate magic link token
-    const token = Buffer.from(\`\${email}:\${Date.now()}\`).toString("base64url");
-    const magicLink = \`\${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/verify?token=\${token}\`;
+    const token = Buffer.from(`${email}:${Date.now()}`).toString("base64url");
+    const magicLink = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/auth/verify?token=${token}`;
 
     // Send email only if API key is configured
     if (process.env.RESEND_API_KEY) {
@@ -27,15 +27,15 @@ export async function POST(request: Request) {
         from: "TrendCatch <alerts@trendcatch.app>",
         to: email,
         subject: "Your magic link to TrendCatch",
-        html: \`
+        html: `
           <div style="font-family: -apple-system, sans-serif; max-width: 600px; margin: 0 auto;">
             <h1 style="color: #8b5cf6;">Welcome to TrendCatch</h1>
             <p>Click the button below to log in:</p>
-            <a href="\${magicLink}" style="display: inline-block; background: #8b5cf6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+            <a href="${magicLink}" style="display: inline-block; background: #8b5cf6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">
               Log In to TrendCatch
             </a>
           </div>
-        \`,
+        `,
       });
     }
 
