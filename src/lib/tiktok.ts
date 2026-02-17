@@ -7,9 +7,24 @@
  * We scrape multiple countries to get diversity and cache aggressively.
  */
 
-import { db } from "./db";
-import { sounds, soundSnapshots } from "./db/schema";
 import { eq, desc, and, gte } from "drizzle-orm";
+import type { sounds as SoundsTable, soundSnapshots as SnapshotsTable } from "./db/schema";
+
+// Lazy-load database to avoid build-time native module issues
+let _db: Awaited<typeof import("./db")>["db"] | null = null;
+let _sounds: typeof SoundsTable | null = null;
+let _soundSnapshots: typeof SnapshotsTable | null = null;
+
+async function getDb() {
+  if (!_db) {
+    const dbModule = await import("./db");
+    const schemaModule = await import("./db/schema");
+    _db = dbModule.db;
+    _sounds = schemaModule.sounds;
+    _soundSnapshots = schemaModule.soundSnapshots;
+  }
+  return { db: _db, sounds: _sounds!, soundSnapshots: _soundSnapshots! };
+}
 
 // Countries to scrape for trending sounds (top music markets)
 const COUNTRIES = [
@@ -119,6 +134,7 @@ async function scrapeCreativeCenter(countryCode: string): Promise<TikTokSound[]>
  * Stores scraped sounds in the database
  */
 async function storeSounds(soundList: TikTokSound[]): Promise<void> {
+  const { db, sounds, soundSnapshots } = await getDb();
   const now = new Date();
   
   for (const sound of soundList) {
@@ -189,6 +205,8 @@ export async function fetchTrendingSounds(forceRefresh = false): Promise<{
   velocity: number;
   capturedAt: Date;
 }[]> {
+  const { db, soundSnapshots } = await getDb();
+  
   // Get current timestamp
   const now = Date.now();
   const cacheThreshold = new Date(now - CACHE_TTL);
@@ -217,9 +235,9 @@ export async function fetchTrendingSounds(forceRefresh = false): Promise<{
     
     for (const country of countriesToScrape) {
       if (forceRefresh || shouldFetch(country)) {
-        const sounds = await scrapeCreativeCenter(country);
-        if (sounds.length > 0) {
-          await storeSounds(sounds);
+        const scrapedSounds = await scrapeCreativeCenter(country);
+        if (scrapedSounds.length > 0) {
+          await storeSounds(scrapedSounds);
           fetchCache.set(country, { countryCode: country, lastFetch: now });
         }
         
@@ -263,6 +281,8 @@ export async function fetchTrendingSounds(forceRefresh = false): Promise<{
  * Get a specific sound with its history
  */
 export async function getSoundDetails(soundId: string) {
+  const { db, sounds, soundSnapshots } = await getDb();
+  
   const sound = await db.query.sounds.findFirst({
     where: eq(sounds.id, soundId),
     with: {
