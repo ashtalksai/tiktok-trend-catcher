@@ -4,9 +4,6 @@ FROM node:22-alpine AS base
 FROM base AS deps
 WORKDIR /app
 
-# Install build dependencies for native modules (better-sqlite3)
-RUN apk add --no-cache python3 make g++
-
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
@@ -36,9 +33,6 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Create data directory for SQLite
-RUN mkdir -p /app/data && chown nextjs:nodejs /app/data
-
 COPY --from=builder /app/public ./public
 
 # Set the correct permission for prerender cache
@@ -49,17 +43,11 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy better-sqlite3 native bindings (not included in standalone output)
-COPY --from=deps --chown=nextjs:nodejs /app/node_modules/.pnpm/better-sqlite3@*/node_modules/better-sqlite3 ./node_modules/better-sqlite3
-
 USER nextjs
 
 EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
-
-# Mount volume for SQLite data
-VOLUME ["/app/data"]
 
 CMD ["node", "server.js"]
