@@ -1,56 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { TrendingUp, Zap, Music, ExternalLink, Settings, Home as HomeIcon, BarChart3 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { TrendingUp, Zap, Music, ExternalLink, Settings, Home as HomeIcon, BarChart3, RefreshCw } from "lucide-react";
 
-// Mock data for demo
-const mockSounds = [
-  {
-    id: "1",
-    name: "Cupid",
-    artist: "FIFTY FIFTY",
-    velocity: 450,
-    oldUses: 1200,
-    newUses: 6600,
-    coverUrl: "/placeholder.png",
-  },
-  {
-    id: "2",
-    name: "Boy's a Liar Pt. 2",
-    artist: "PinkPantheress & Ice Spice",
-    velocity: 380,
-    oldUses: 800,
-    newUses: 3840,
-    coverUrl: "/placeholder.png",
-  },
-  {
-    id: "3",
-    name: "die for you",
-    artist: "The Weeknd & Ariana Grande",
-    velocity: 320,
-    oldUses: 2100,
-    newUses: 8820,
-    coverUrl: "/placeholder.png",
-  },
-  {
-    id: "4",
-    name: "Last Last",
-    artist: "Burna Boy",
-    velocity: 295,
-    oldUses: 1500,
-    newUses: 5925,
-    coverUrl: "/placeholder.png",
-  },
-  {
-    id: "5",
-    name: "Escapism",
-    artist: "RAYE ft. 070 Shake",
-    velocity: 510,
-    oldUses: 400,
-    newUses: 2440,
-    coverUrl: "/placeholder.png",
-  },
-];
+// Sound data type from API
+interface Sound {
+  id: string;
+  name: string;
+  artist: string;
+  coverUrl: string;
+  tiktokUrl: string;
+  latestUses: number;
+  velocity: number;
+  capturedAt: string;
+}
 
 function VelocityBadge({ velocity }: { velocity: number }) {
   let colorClass = "velocity-hot";
@@ -60,31 +23,41 @@ function VelocityBadge({ velocity }: { velocity: number }) {
     colorClass = "velocity-very-hot";
   }
 
+  const sign = velocity >= 0 ? "+" : "";
+
   return (
     <span className={`${colorClass} text-white text-lg font-bold px-3 py-1 rounded-full inline-flex items-center gap-1 font-mono`}>
       <Zap className="w-4 h-4" />
-      +{velocity}%
+      {sign}{velocity}%
     </span>
   );
 }
 
-function SoundCard({ sound, onClick }: { sound: typeof mockSounds[0]; onClick: () => void }) {
+function SoundCard({ sound, onClick }: { sound: Sound; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
       className="w-full text-left bg-card hover:bg-accent transition-all duration-200 hover:scale-[1.02] p-4 rounded-xl border border-border shadow-sm"
     >
       <div className="flex items-start gap-4">
-        <div className="w-14 h-14 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
-          <Music className="w-6 h-6 text-muted-foreground" />
-        </div>
+        {sound.coverUrl && sound.coverUrl !== "/placeholder.png" ? (
+          <img 
+            src={sound.coverUrl} 
+            alt={sound.name}
+            className="w-14 h-14 rounded-lg object-cover flex-shrink-0"
+          />
+        ) : (
+          <div className="w-14 h-14 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+            <Music className="w-6 h-6 text-muted-foreground" />
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-lg truncate">{sound.name}</h3>
           <p className="text-muted-foreground text-sm truncate">{sound.artist}</p>
-          <div className="mt-2 flex items-center gap-3">
+          <div className="mt-2 flex items-center gap-3 flex-wrap">
             <VelocityBadge velocity={sound.velocity} />
             <span className="text-sm text-muted-foreground">
-              {sound.oldUses.toLocaleString()} → {sound.newUses.toLocaleString()} uses
+              ~{sound.latestUses.toLocaleString()} uses
             </span>
           </div>
         </div>
@@ -161,11 +134,11 @@ function LandingPage({ onSubmit }: { onSubmit: (email: string) => void }) {
           <ol className="space-y-3 text-muted-foreground">
             <li className="flex gap-3">
               <span className="bg-primary/10 text-primary font-bold w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0">1</span>
-              <span>We monitor 200+ micro-influencers (10K-100K followers)</span>
+              <span>We scan TikTok Creative Center trends globally</span>
             </li>
             <li className="flex gap-3">
               <span className="bg-primary/10 text-primary font-bold w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0">2</span>
-              <span>Track velocity, not volume (400% growth &gt; 50K peaked)</span>
+              <span>Track velocity, not volume (rising trends matter most)</span>
             </li>
             <li className="flex gap-3">
               <span className="bg-primary/10 text-primary font-bold w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0">3</span>
@@ -179,11 +152,11 @@ function LandingPage({ onSubmit }: { onSubmit: (email: string) => void }) {
           <h2 className="font-semibold text-lg">Recent Alerts</h2>
           <div className="space-y-2">
             <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border">
-              <span className="font-medium">🎵 "Cupid" by FIFTY FIFTY</span>
+              <span className="font-medium truncate flex-1">🎵 "霧化する言語" by yasuhiro soda</span>
               <VelocityBadge velocity={450} />
             </div>
             <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border">
-              <span className="font-medium">🎵 "Boy's a Liar Pt.2"</span>
+              <span className="font-medium truncate flex-1">🎵 "Baby Boo Ice Cream"</span>
               <VelocityBadge velocity={380} />
             </div>
           </div>
@@ -194,8 +167,38 @@ function LandingPage({ onSubmit }: { onSubmit: (email: string) => void }) {
 }
 
 function Dashboard({ onSoundClick, onSettingsClick }: { onSoundClick: (id: string) => void; onSettingsClick: () => void }) {
+  const [sounds, setSounds] = useState<Sound[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchSounds = async (refresh = false) => {
+    try {
+      if (refresh) setRefreshing(true);
+      const url = refresh ? "/api/sounds?refresh=true" : "/api/sounds";
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch sounds");
+      const data = await response.json();
+      setSounds(data);
+      setError(null);
+    } catch (err) {
+      setError("Failed to load trending sounds");
+      console.error(err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSounds();
+    // Refresh every 5 minutes
+    const interval = setInterval(() => fetchSounds(), 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Sort by velocity descending
-  const sortedSounds = [...mockSounds].sort((a, b) => b.velocity - a.velocity);
+  const sortedSounds = [...sounds].sort((a, b) => b.velocity - a.velocity);
 
   return (
     <div className="min-h-screen bg-background">
@@ -208,12 +211,22 @@ function Dashboard({ onSoundClick, onSettingsClick }: { onSoundClick: (id: strin
             </div>
             <span className="font-bold text-lg">TrendCatch</span>
           </div>
-          <button 
-            onClick={onSettingsClick}
-            className="p-2 hover:bg-accent rounded-lg transition-colors"
-          >
-            <Settings className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => fetchSounds(true)}
+              disabled={refreshing}
+              className="p-2 hover:bg-accent rounded-lg transition-colors disabled:opacity-50"
+              title="Refresh trends"
+            >
+              <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
+            </button>
+            <button 
+              onClick={onSettingsClick}
+              className="p-2 hover:bg-accent rounded-lg transition-colors"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -223,22 +236,58 @@ function Dashboard({ onSoundClick, onSettingsClick }: { onSoundClick: (id: strin
           <h1 className="text-2xl font-bold flex items-center gap-2">
             Trending Now 🔥
           </h1>
-          <span className="text-sm text-muted-foreground">Sorted by velocity ↓</span>
+          <span className="text-sm text-muted-foreground">
+            {sounds.length} sounds • Sorted by velocity ↓
+          </span>
         </div>
 
-        <div className="space-y-3">
-          {sortedSounds.map((sound) => (
-            <SoundCard
-              key={sound.id}
-              sound={sound}
-              onClick={() => onSoundClick(sound.id)}
-            />
-          ))}
-        </div>
-
-        <button className="w-full mt-6 py-3 text-muted-foreground hover:text-foreground transition-colors">
-          Load more...
-        </button>
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="animate-pulse bg-card p-4 rounded-xl border border-border">
+                <div className="flex items-start gap-4">
+                  <div className="w-14 h-14 bg-muted rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-5 bg-muted rounded w-3/4" />
+                    <div className="h-4 bg-muted rounded w-1/2" />
+                    <div className="h-8 bg-muted rounded w-1/3 mt-2" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">{error}</p>
+            <button 
+              onClick={() => fetchSounds(true)}
+              className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg"
+            >
+              Retry
+            </button>
+          </div>
+        ) : sortedSounds.length === 0 ? (
+          <div className="text-center py-12">
+            <Music className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">No trending sounds yet.</p>
+            <button 
+              onClick={() => fetchSounds(true)}
+              className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg"
+            >
+              Fetch Latest Trends
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {sortedSounds.map((sound) => (
+              <SoundCard
+                key={sound.id}
+                sound={sound}
+                onClick={() => onSoundClick(sound.id)}
+              />
+            ))}
+          </div>
+        )}
       </main>
 
       {/* Bottom Nav */}
@@ -262,16 +311,25 @@ function Dashboard({ onSoundClick, onSettingsClick }: { onSoundClick: (id: strin
   );
 }
 
-function SoundDetail({ soundId, onBack }: { soundId: string; onBack: () => void }) {
-  const sound = mockSounds.find(s => s.id === soundId) || mockSounds[0];
+function SoundDetail({ soundId, sounds, onBack }: { soundId: string; sounds: Sound[]; onBack: () => void }) {
+  const sound = sounds.find(s => s.id === soundId) || sounds[0];
   
-  // Mock chart data
+  if (!sound) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Sound not found</p>
+      </div>
+    );
+  }
+  
+  // Mock chart data based on velocity
+  const baseValue = Math.max(100, sound.latestUses - Math.abs(sound.velocity) * 10);
   const chartData = [
-    { time: "6h", uses: sound.oldUses },
-    { time: "12h", uses: Math.round(sound.oldUses * 1.5) },
-    { time: "18h", uses: Math.round(sound.oldUses * 2.5) },
-    { time: "24h", uses: Math.round(sound.newUses * 0.8) },
-    { time: "now", uses: sound.newUses },
+    { time: "6h ago", uses: baseValue },
+    { time: "12h", uses: Math.round(baseValue * 1.2) },
+    { time: "18h", uses: Math.round(baseValue * 1.6) },
+    { time: "24h", uses: Math.round(sound.latestUses * 0.85) },
+    { time: "now", uses: sound.latestUses },
   ];
 
   return (
@@ -289,9 +347,17 @@ function SoundDetail({ soundId, onBack }: { soundId: string; onBack: () => void 
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* Sound Info */}
         <div className="text-center space-y-2">
-          <div className="w-20 h-20 bg-muted rounded-xl flex items-center justify-center mx-auto">
-            <Music className="w-10 h-10 text-muted-foreground" />
-          </div>
+          {sound.coverUrl && sound.coverUrl !== "/placeholder.png" ? (
+            <img 
+              src={sound.coverUrl} 
+              alt={sound.name}
+              className="w-20 h-20 rounded-xl mx-auto object-cover"
+            />
+          ) : (
+            <div className="w-20 h-20 bg-muted rounded-xl flex items-center justify-center mx-auto">
+              <Music className="w-10 h-10 text-muted-foreground" />
+            </div>
+          )}
           <h1 className="text-2xl font-bold">🎵 {sound.name}</h1>
           <p className="text-muted-foreground">{sound.artist}</p>
         </div>
@@ -299,8 +365,10 @@ function SoundDetail({ soundId, onBack }: { soundId: string; onBack: () => void 
         {/* Velocity */}
         <div className="bg-card p-6 rounded-xl border border-border text-center">
           <div className="text-sm text-muted-foreground mb-2">⚡ Velocity</div>
-          <div className="text-4xl font-bold font-mono text-primary">+{sound.velocity}%</div>
-          <div className="text-muted-foreground">in last 6 hours</div>
+          <div className="text-4xl font-bold font-mono text-primary">
+            {sound.velocity >= 0 ? "+" : ""}{sound.velocity}%
+          </div>
+          <div className="text-muted-foreground">trend strength</div>
         </div>
 
         {/* Chart Placeholder */}
@@ -311,7 +379,7 @@ function SoundDetail({ soundId, onBack }: { soundId: string; onBack: () => void 
               <div key={i} className="flex-1 flex flex-col items-center gap-2">
                 <div 
                   className="w-full bg-primary/80 rounded-t"
-                  style={{ height: `${(point.uses / sound.newUses) * 150}px` }}
+                  style={{ height: `${(point.uses / sound.latestUses) * 150}px` }}
                 />
                 <span className="text-xs text-muted-foreground">{point.time}</span>
               </div>
@@ -324,40 +392,27 @@ function SoundDetail({ soundId, onBack }: { soundId: string; onBack: () => void 
           <h2 className="font-semibold mb-4">📊 Stats</h2>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Current uses</span>
-              <span className="font-mono">{sound.newUses.toLocaleString()}</span>
+              <span className="text-muted-foreground">Estimated uses</span>
+              <span className="font-mono">~{sound.latestUses.toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">6h ago</span>
-              <span className="font-mono">{sound.oldUses.toLocaleString()}</span>
+              <span className="text-muted-foreground">Velocity</span>
+              <span className="font-mono text-green-500">
+                {sound.velocity >= 0 ? "+" : ""}{sound.velocity}%
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Growth</span>
-              <span className="font-mono text-green-500">+{(sound.newUses - sound.oldUses).toLocaleString()} (+{sound.velocity}%)</span>
+              <span className="text-muted-foreground">Last updated</span>
+              <span className="font-mono">{new Date(sound.capturedAt).toLocaleString()}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Detection time</span>
-              <span className="font-mono">2h ago</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Sample Videos */}
-        <div className="bg-card p-6 rounded-xl border border-border">
-          <h2 className="font-semibold mb-4">🎬 Sample Videos</h2>
-          <div className="grid grid-cols-3 gap-2">
-            {[12000, 8000, 6000].map((likes, i) => (
-              <div key={i} className="aspect-[9/16] bg-muted rounded-lg flex flex-col items-center justify-center">
-                <span className="text-2xl">🎬</span>
-                <span className="text-xs text-muted-foreground mt-1">{(likes/1000).toFixed(0)}K likes</span>
-              </div>
-            ))}
           </div>
         </div>
 
         {/* TikTok Link */}
         <a 
-          href="#" 
+          href={sound.tiktokUrl || "https://tiktok.com"} 
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex items-center justify-center gap-2 w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 transition-opacity"
         >
           Open on TikTok <ExternalLink className="w-4 h-4" />
@@ -481,6 +536,15 @@ function SettingsPage({ onBack }: { onBack: () => void }) {
           </button>
         </div>
 
+        {/* Data Source Info */}
+        <div className="bg-card p-6 rounded-xl border border-border space-y-4">
+          <h2 className="font-semibold text-lg">📊 Data Source</h2>
+          <p className="text-sm text-muted-foreground">
+            Trending sounds are sourced from TikTok Creative Center across multiple countries. 
+            Data is refreshed every 6 hours to stay within rate limits.
+          </p>
+        </div>
+
         {/* Save */}
         <button className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 transition-opacity">
           Save Changes
@@ -493,6 +557,7 @@ function SettingsPage({ onBack }: { onBack: () => void }) {
 export default function Home() {
   const [view, setView] = useState<"landing" | "dashboard" | "detail" | "settings">("landing");
   const [selectedSoundId, setSelectedSoundId] = useState<string | null>(null);
+  const [sounds, setSounds] = useState<Sound[]>([]);
 
   const handleLogin = () => {
     setView("dashboard");
@@ -503,12 +568,22 @@ export default function Home() {
     setView("detail");
   };
 
+  // Fetch sounds for detail view
+  useEffect(() => {
+    if (view === "dashboard" || view === "detail") {
+      fetch("/api/sounds")
+        .then(res => res.json())
+        .then(data => setSounds(data))
+        .catch(console.error);
+    }
+  }, [view]);
+
   if (view === "landing") {
     return <LandingPage onSubmit={handleLogin} />;
   }
 
   if (view === "detail" && selectedSoundId) {
-    return <SoundDetail soundId={selectedSoundId} onBack={() => setView("dashboard")} />;
+    return <SoundDetail soundId={selectedSoundId} sounds={sounds} onBack={() => setView("dashboard")} />;
   }
 
   if (view === "settings") {

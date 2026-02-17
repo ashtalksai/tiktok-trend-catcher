@@ -1,4 +1,5 @@
 import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
+import { relations } from "drizzle-orm";
 
 // Sounds table - tracks TikTok sounds
 export const sounds = sqliteTable("sounds", {
@@ -10,6 +11,11 @@ export const sounds = sqliteTable("sounds", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
 
+// Sound relations
+export const soundsRelations = relations(sounds, ({ many }) => ({
+  snapshots: many(soundSnapshots),
+}));
+
 // Sound snapshots - usage data over time
 export const soundSnapshots = sqliteTable("sound_snapshots", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -18,6 +24,14 @@ export const soundSnapshots = sqliteTable("sound_snapshots", {
   velocity: real("velocity"), // % change from previous snapshot
   capturedAt: integer("captured_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
 });
+
+// Snapshot relations
+export const soundSnapshotsRelations = relations(soundSnapshots, ({ one }) => ({
+  sound: one(sounds, {
+    fields: [soundSnapshots.soundId],
+    references: [sounds.id],
+  }),
+}));
 
 // Users table
 export const users = sqliteTable("users", {
